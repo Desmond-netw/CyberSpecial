@@ -7,24 +7,29 @@ import (
 )
 
 func main() {
-	fmt.Println("Scrapping the web")
+	fmt.Println("Hunting the web")
 
-	scraperUrl := "https://wiki.hackerspaces.org/Talk:Communication"
+	targetUrl := "https://www.trackingdifferences.com/ETF/ISIN/IE00B1XNHC34"
 
-	// initialize the collector
+	// initialize the colly collector
 	col := colly.NewCollector(
 		// allow only domains
-		colly.AllowedDomains("wiki.hackerspaces.org", "www.wiki.hackerspaces.org"),
+		colly.AllowedDomains("www.trackingdifferences.com", "trackingdifferences.com"),
 		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"),
 	)
 
 	//on every html element which has h1 elment
-	col.OnHTML("h1.firstHeading", func(h *colly.HTMLElement) {
+	col.OnHTML("a[href]", func(e *colly.HTMLElement) {
+		link := e.Attr("href")
 		// print text
-		fmt.Printf("Found H1: %s\n", h.Text)
+		fmt.Printf("link found: %q => %s \n", e.Text, link)
+
+		// visit link found in page
+		col.Visit(e.Request.AbsoluteURL(link))
+
 	})
 
-	err := col.Visit(scraperUrl)
+	err := col.Visit(targetUrl)
 	if err != nil {
 		fmt.Println("Error visiting the URL:", err)
 	}
