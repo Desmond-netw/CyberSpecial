@@ -18,6 +18,11 @@ func main() {
 		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"),
 	)
 
+	col.OnRequest(func(req *colly.Request) {
+		// print the visited url
+		fmt.Println("Visiting", req.URL.String())
+	})
+
 	//on every html element which has h1 elment
 	col.OnHTML("a[href]", func(e *colly.HTMLElement) {
 		link := e.Attr("href")
@@ -25,7 +30,7 @@ func main() {
 		fmt.Printf("link found: %q => %s \n", e.Text, link)
 
 		// visit link found in page
-		col.Visit(e.Request.AbsoluteURL(link))
+		// col.Visit(e.Request.AbsoluteURL(link))
 
 	})
 
