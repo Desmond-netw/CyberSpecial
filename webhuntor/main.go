@@ -2,41 +2,39 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gocolly/colly/v2"
 )
 
 func main() {
-	fmt.Println("Hunting the web")
 
-	targetUrl := "https://www.trackingdifferences.com/ETF/ISIN/IE00B1XNHC34"
+	// WEB SCRAPER TITLE
+	fmt.Println("Web Scraper")
 
-	// initialize the colly collector
-	col := colly.NewCollector(
-		// allow only domains
+	url := "https://www.trackingdifferences.com/ETF/ISIN/IE00B1XNHC34"
+	// Building web collector
+	c := colly.NewCollector(
 		colly.AllowedDomains("www.trackingdifferences.com", "trackingdifferences.com"),
-		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"),
+		colly.UserAgent("Mozilla/5.0 (windows NT 10.0; Win64; x64)"),
 	)
-
-	col.OnRequest(func(req *colly.Request) {
-		// print the visited url
-		fmt.Println("Visiting", req.URL.String())
+	// print the url that we search
+	c.OnRequest(func(rq *colly.Request) {
+		fmt.Println("Visiting", rq.URL.String())
+	})
+	// what we looking for
+	c.OnHTML("h1.page-title", func(e *colly.HTMLElement) {
+		fmt.Println("Header Titile :", e.Text)
+	})
+	c.OnHTML("a[href]", func(h *colly.HTMLElement) {
+		link := h.Attr("href")
+		fmt.Printf("Link found : %q -> %s\n", h.Text, link)
 	})
 
-	//on every html element which has h1 elment
-	col.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		link := e.Attr("href")
-		// print text
-		fmt.Printf("link found: %q => %s \n", e.Text, link)
-
-		// visit link found in page
-		// col.Visit(e.Request.AbsoluteURL(link))
-
-	})
-
-	err := col.Visit(targetUrl)
+	// visit lurl
+	err := c.Visit(url)
 	if err != nil {
-		fmt.Println("Error visiting the URL:", err)
+		log.Fatal("Error visiting url:", err)
 	}
 
-} // end of main
+}
