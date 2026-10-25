@@ -1,13 +1,27 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/gocolly/colly/v2"
 )
 
+// Etf structs
+type EtfInfo struct {
+	Title              string
+	Replication        string
+	Earnings           string
+	TotalExpenseRatio  string
+	TrackingDifference string
+	FundSize           string
+}
+
 func main() {
+	etfinfo := EtfInfo{}
 
 	// WEB SCRAPER TITLE
 	fmt.Println("Web Scraper")
@@ -35,22 +49,46 @@ func main() {
 		selection := h.DOM
 		childNode := selection.Children().Nodes
 		if len(childNode) == 3 {
-			dscrp := selection.Find("span.desctitle").Text()
+			dscrp := cleanDesc(selection.Find("span.desctitle").Text())
 			value := selection.FindNodes(childNode[2]).Text()
 
-			fmt.Printf("%s : %s\n", dscrp, value)
+			switch dscrp {
+			case "Replication":
+				etfinfo.Replication = value
+			case "Earnings":
+				etfinfo.Earnings = value
+			case "TER":
+				etfinfo.TotalExpenseRatio = value
+			case "TD":
+				etfinfo.TrackingDifference = value
+			case "Fund size":
+				etfinfo.FundSize = value
+				break
+			}
+
 		}
 
+	})
+
+	c.OnScraped(func(r *colly.Response) {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", " ")
+		enc.Encode(etfinfo)
 	})
 
 	// error handling
 	c.OnError(func(r *colly.Response, err error) {
 		fmt.Println("Request URL", r.Request.URL, "faild with response", r, "\nError:", err)
 	})
+
 	// visit lurl
 	err := c.Visit(url)
 	if err != nil {
 		log.Fatal("Error visiting url:", err)
 	}
 
+}
+
+func cleanDesc(s string) string {
+	return strings.TrimSpace(s)
 }
